@@ -1,10 +1,16 @@
 // -----------------------------------------------
 // Simple 2D font
 // -----------------------------------------------
-#ifndef PLATFORM_PSP
-#include "SDL_opengl.h"
-#else
+
+#if defined(PLATFORM_PSP)
 #include "SDL/SDL_opengl.h"
+#elif defined(PLATFORM_PSVITA)
+#include "GL/gl.h"
+#ifdef PSVITA_DEBUG
+#define printf(...) psp2shell_print(__VA_ARGS__)
+#endif
+#else
+#include <SDL_opengl.h>
 #endif
 
 #ifndef _GLFONT2DH_

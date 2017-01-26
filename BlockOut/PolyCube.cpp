@@ -811,6 +811,7 @@ void PolyCube::Render(BOOL redMode) {
   glDisable(GL_DEPTH_TEST);
   glDisable(GL_TEXTURE_2D);
 
+#ifndef PLATFORM_PSVITA
   if( hasGhost ) {
 
     // Alpha texture
@@ -828,6 +829,7 @@ void PolyCube::Render(BOOL redMode) {
     glCallList(ghostList);
 
   }
+#endif
 
   glDisable(GL_TEXTURE_2D);
   glDisable(GL_LIGHTING);

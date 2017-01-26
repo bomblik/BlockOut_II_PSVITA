@@ -85,7 +85,7 @@ int Menu::Process(BYTE *keys,float fTime) {
 
   if( animEnded ) {
 
-#ifndef PLATFORM_PSP
+#if !defined(PLATFORM_PSP) && !defined(PLATFORM_PSVITA)
      // Limit frame 
     if( selPage != &controlsPage &&  selPage != &creditsPage ) {
       SDL_Delay(50);

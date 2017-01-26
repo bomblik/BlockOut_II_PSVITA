@@ -21,12 +21,16 @@ GLApplication::GLApplication() {
   m_bVSync = false;
   m_strWindowTitle = (char *)"GL application";
   strcpy((char *)m_strFrameStats,"");
-#ifndef PLATFORM_PSP
-  m_screenWidth = 640;
-  m_screenHeight = 480;
-#else
+
+#if defined(PLATFORM_PSP)
   m_screenWidth = 480;
   m_screenHeight = 272;
+#elif defined(PLATFORM_PSVITA)
+  m_screenWidth = 960;
+  m_screenHeight = 544;
+#else
+  m_screenWidth = 640;
+  m_screenHeight = 480;
 #endif
 
 }
@@ -35,7 +39,7 @@ GLApplication::GLApplication() {
 
 int GLApplication::SetVideoMode() {
 
-#ifndef PLATFORM_PSP
+#if !defined(PLATFORM_PSP) && !defined(PLATFORM_PSVITA)
   // Enable/Disable vertical blanking 
   // Work only at application startup
   SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL,m_bVSync);
@@ -43,14 +47,17 @@ int GLApplication::SetVideoMode() {
 
   // Set the video mode
   Uint32 flags;
-#ifndef PLATFORM_PSP
+
+#if defined(PLATFORM_PSP)
+  flags = SDL_DOUBLEBUF | SDL_OPENGL | SDL_FULLSCREEN;
+#elif defined(PLATFORM_PSVITA)
+  flags = SDL_SWSURFACE | SDL_ANYFORMAT;
+#else
   if( m_bWindowed ) flags = SDL_DOUBLEBUF | SDL_OPENGL;
   else              flags = SDL_DOUBLEBUF | SDL_OPENGL | SDL_FULLSCREEN;
-#else
-  flags = SDL_DOUBLEBUF | SDL_OPENGL | SDL_FULLSCREEN;
 #endif
 
-#ifndef PLATFORM_PSP
+#if !defined(PLATFORM_PSP) && !defined(PLATFORM_PSVITA)
   if( SDL_SetVideoMode( m_screenWidth, m_screenHeight, 0, flags ) == NULL )
 #else
   if( SDL_SetVideoMode( m_screenWidth, m_screenHeight, 32, flags ) == NULL )
@@ -85,10 +92,12 @@ int GLApplication::ToggleFullscreen() {
 
   m_bWindowed = !m_bWindowed;
 
+#if !defined(PLATFORM_PSVITA)
   if( !SetVideoMode() ) return GL_FAIL;
 
   SDL_Surface *vSurf = SDL_GetVideoSurface();
   m_bitsPerPixel = vSurf->format->BitsPerPixel;
+#endif
 
   errCode = RestoreDeviceObjects();
   if( !errCode ) {
@@ -111,14 +120,18 @@ int GLApplication::Create(int width, int height, BOOL bFullScreen, BOOL bVSync )
   m_screenHeight = height;
   m_bWindowed = !bFullScreen;
   
-#ifndef WINDOWS
+#if !defined(WINDOWS) && !defined(PLATFORM_PSVITA)
   if( getenv("DISPLAY")==NULL ) {
     printf("Warning, DISPLAY not defined, it may not work.\n");
   }
 #endif
 
   //Initialize SDL
+#if !defined(PLATFORM_PSVITA)
   if( SDL_Init( SDL_INIT_EVERYTHING ) < 0 )
+#else
+  if( SDL_Init( SDL_INIT_TIMER | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK ) < 0 )
+#endif
   {
 #ifdef WINDOWS
     char message[256];
@@ -130,12 +143,21 @@ int GLApplication::Create(int width, int height, BOOL bFullScreen, BOOL bVSync )
 	return GL_FAIL;    
   }
 
-#ifndef PLATFORM_PSP
+#if !defined(PLATFORM_PSP) && !defined(PLATFORM_PSVITA)
   SDL_WM_SetCaption(m_strWindowTitle, NULL);
 
   //SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, 0);
 #else
-  if(SDL_NumJoysticks()>0) joy=SDL_JoystickOpen(0);
+  SDL_JoystickEventState (SDL_ENABLE);
+
+  if(SDL_NumJoysticks()>0)
+  {
+      joy=SDL_JoystickOpen(0);
+  }
+#endif
+
+#if defined(PLATFORM_PSVITA)
+  vglInit();
 #endif
 
   SDL_EnableUNICODE( 1 );
@@ -144,13 +166,52 @@ int GLApplication::Create(int width, int height, BOOL bFullScreen, BOOL bVSync )
   //Create Window
   if( !SetVideoMode() ) return GL_FAIL;
 
+#if !defined(PLATFORM_PSVITA)
   SDL_Surface *vSurf = SDL_GetVideoSurface();
   m_bitsPerPixel = vSurf->format->BitsPerPixel;
+#endif
+
+#if defined(PLATFORM_PSVITA) && defined(GEKIHEN_CONTEST_SPLASH_SCREEN)
+  SDL_Surface *surface= SDL_GetVideoSurface();
+  BYTE *pixels = NULL;
+
+  CImage img;
+
+  if( !img.LoadImage(LID("images.psvita/gekihen-splash.png")) )
+  {
+    printf( "loading splash screen error\n");
+  }
+
+  BYTE *data = img.GetData();
+
+  if( SDL_MUSTLOCK( surface ) )
+  {
+    SDL_LockSurface( surface );
+  }
+
+  pixels = (BYTE *)surface->pixels;
+
+  for(int j=0;j<544;j++)
+    for(int i=0;i<960;i++ ) {
+      pixels[i*4+0 + j*960*4] = data[i*3+2 + j*960*3];
+      pixels[i*4+1 + j*960*4] = data[i*3+1 + j*960*3];
+      pixels[i*4+2 + j*960*4] = data[i*3+0 + j*960*3];
+      pixels[i*4+3 + j*960*4] = 0;
+  }
+
+  if( SDL_MUSTLOCK( surface ) )
+  {
+    SDL_UnlockSurface( surface );
+  }
+
+  SDL_Flip (surface);
+  sceKernelDelayThread(3*1000000);
+#endif
 
   OneTimeSceneInit();
   errCode = RestoreDeviceObjects();
 
-#ifndef PLATFORM_PSP
+#if !defined(PLATFORM_PSP) && !defined(PLATFORM_PSVITA)
   if( !errCode ) {
     printGlError();
     exit(0);
@@ -176,10 +237,12 @@ int GLApplication::Resize( DWORD width, DWORD height ) {
 
   InvalidateDeviceObjects();
 
+#if !defined(PLATFORM_PSVITA)
   if( !SetVideoMode() ) return GL_FAIL;
 
   SDL_Surface *vSurf = SDL_GetVideoSurface();
   m_bitsPerPixel = vSurf->format->BitsPerPixel;
+#endif
 
   errCode = RestoreDeviceObjects();
   if( !errCode ) {
@@ -241,16 +304,29 @@ int GLApplication::Run() {
 
      if(!quit) errCode = FrameMove();
      if( !errCode ) quit = true;
+
+#if !defined(PLATFORM_PSVITA)
      if( glGetError() != GL_NO_ERROR ) { printGlError(); quit = true; }
+#endif
 
      if(!quit) errCode = Render();
      if( !errCode ) quit = true;
+
+#if !defined(PLATFORM_PSVITA)
      if( glGetError() != GL_NO_ERROR ) { printGlError(); quit = true; }
+#endif
 
      //Swap buffer
+#if defined(PLATFORM_PSVITA)
+     vglSwap();
+#else
      SDL_GL_SwapBuffers();
-      
+#endif
   }
+
+#if defined(PLATFORM_PSVITA)
+  vglClose();
+#endif
   
   //Clean up
   SDL_Quit();
@@ -282,7 +358,12 @@ void GLApplication::printGlError() {
   
   char message[256];
 
+#if !defined(PLATFORM_PSVITA)
   GLenum errCode = glGetError();
+#else
+  GLenum errCode = 0;
+#endif
+
   switch( errCode ) {
     case GL_INVALID_ENUM:
       sprintf(message,"OpenGL failure: An unacceptable value is specified for an enumerated argument. The offending function is ignored, having no side effect other than to set the error flag.");

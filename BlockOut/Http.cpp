@@ -48,6 +48,12 @@
 #include "netdb.h"
 #endif
 
+#ifdef PLATFORM_PSVITA
+#include "sys/time.h"
+#include "sys/select.h"
+#include "netinet/in.h"
+#endif
+
 #ifdef WINDOWS
 // Initialize Winsock
 void InitialiseWinsock() {
@@ -184,7 +190,7 @@ int Http::Read(int sock, char *buf, int bufsize,DWORD timeout) {
     buf += rd;
     total_read += rd;
     bufsize -= rd;
-  
+
   }
 
   if( rd < 0 ) {
@@ -204,9 +210,9 @@ int Http::Connect(char *site, int port) {
 
   // Resolve IP
   host_info = gethostbyname(site);
-  if (host_info == NULL) {  
+  if (host_info == NULL) {
      sprintf(err_str, "Unknown host: %s", site);
-     return -1; 
+     return -1;
   }
 
   // Build TCP connection
@@ -251,7 +257,7 @@ int Http::Connect(char *site, int port) {
     }
 #endif
     return -1;
-  }  
+  }
 
   // Connect
   memset(&server,0,sizeof(sockaddr_in));
@@ -344,7 +350,7 @@ char *Http::UploadFile(char *url,char *remotePHP,BYTE *buffer,DWORD length,DWORD
   int lgth = (int)strlen(req);
   int w = Write(sock,req,lgth,timeout);
   if( w != lgth ) {
-    if( strlen(err_str)==0 ) 
+    if( strlen(err_str)==0 )
       sprintf(err_str,"HTTP send error");
     closesocket(sock);
     return NULL;
@@ -353,7 +359,7 @@ char *Http::UploadFile(char *url,char *remotePHP,BYTE *buffer,DWORD length,DWORD
   // Write PUT Data
   w = Write(sock,(char *)buffer,length,timeout);
   if( w != length ) {
-    if( strlen(err_str)==0 ) 
+    if( strlen(err_str)==0 )
       sprintf(err_str,"HTTP send error");
     closesocket(sock);
     return NULL;
@@ -362,7 +368,7 @@ char *Http::UploadFile(char *url,char *remotePHP,BYTE *buffer,DWORD length,DWORD
   // Get the response
   int r = Read(sock,response,262143,timeout);
   if( r<=0 ) {
-    if( strlen(err_str)==0 ) 
+    if( strlen(err_str)==0 )
       sprintf(err_str,"HTTP receive error");
     closesocket(sock);
     return NULL;
@@ -401,7 +407,7 @@ char *Http::Get(char *link,DWORD timeout,DWORD *outLength) {
   char page[256];
   char req[1024];
   strcpy(err_str,"");
-  
+
   if( outLength ) *outLength = 0;
 
   if( !CheckProxy() ) return FALSE;
@@ -430,7 +436,7 @@ char *Http::Get(char *link,DWORD timeout,DWORD *outLength) {
     // Default HTTP connection
     sock  = Connect(site,80);
   }
-  
+
   if( sock < 0 )
     return NULL;
 
@@ -446,7 +452,7 @@ char *Http::Get(char *link,DWORD timeout,DWORD *outLength) {
   int lgth = (int)strlen(req);
   int w = Write(sock,req,lgth,timeout);
   if( w != lgth ) {
-    if( strlen(err_str)==0 ) 
+    if( strlen(err_str)==0 )
       sprintf(err_str,"HTTP send error");
     closesocket(sock);
     return NULL;
@@ -455,7 +461,7 @@ char *Http::Get(char *link,DWORD timeout,DWORD *outLength) {
   // Get the response
   int r = Read(sock,response,262143,timeout);
   if( r<=0 ) {
-    if( strlen(err_str)==0 ) 
+    if( strlen(err_str)==0 )
       sprintf(err_str,"HTTP receive error");
     closesocket(sock);
     return NULL;
@@ -478,7 +484,7 @@ char *Http::Get(char *link,DWORD timeout,DWORD *outLength) {
     sprintf(err_str,"Invalid HTTP response");
     return NULL;
   }
-  
+
   if( outLength ) *outLength = r - (int)((p+4)-response);
 
   return p+4;

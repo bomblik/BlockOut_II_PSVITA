@@ -21,7 +21,12 @@ GLFont2D::GLFont2D() {
 int GLFont2D::RestoreDeviceObjects(int scrWidth,int scrHeight) {
   // Load the image
   CImage img;
+
+#if !defined(PLATFORM_PSVITA)
   if( !img.LoadImage(LID((char *)"images/font.png")) ) {
+#else
+  if( !img.LoadImage(LID((char *)"images.psvita/font.png")) ) {
+#endif
 #ifdef WINDOWS
     char message[256];
 	sprintf(message,"Failed to load %s\n",LID((char *)"images/font.png"));
@@ -32,6 +37,7 @@ int GLFont2D::RestoreDeviceObjects(int scrWidth,int scrHeight) {
 	return 0;
   }
 
+#if !defined(PLATFORM_PSVITA)
   // Make 32 Bit RGBA buffer
   fWidth  = img.Width();
   fHeight = img.Height();
@@ -60,10 +66,43 @@ int GLFont2D::RestoreDeviceObjects(int scrWidth,int scrHeight) {
     GL_UNSIGNED_BYTE,    // 8 Bit/color
     buff32               // Data
   );
+#else
+  // Make 32 Bit RGB buffer
+  fWidth  = img.Width();
+  fHeight = img.Height();
+  BYTE *buff32 = (BYTE *)malloc(fWidth*fHeight*3);
+
+  BYTE *data   = img.GetData();
+
+  for(int y=0;y<fHeight;y++) {
+    for(int x=0;x<fWidth;x++) {
+      buff32[x*3 + 0 + y*3*fWidth] = data[x*3+2 + y*3*fWidth];
+      buff32[x*3 + 1 + y*3*fWidth] = data[x*3+1 + y*3*fWidth];
+      buff32[x*3 + 2 + y*3*fWidth] = data[x*3+0 + y*3*fWidth];
+    }
+  }
+
+  glGenTextures(1,&texId);
+
+  glBindTexture(GL_TEXTURE_2D,texId);
+
+  glTexImage2D (
+    GL_TEXTURE_2D,       // Type
+    0,                   // No Mipmap
+    3,                   // Format RGB
+    fWidth,              // Width
+    fHeight,             // Height
+    0,                   // Border
+    GL_RGB,              // Format RGB
+    GL_UNSIGNED_BYTE,    // 8 Bit/color
+    buff32               // Data
+  );
+#endif
 
   free(buff32);
   img.Release();
 
+#ifndef PLATFORM_PSVITA
   if( glGetError() != GL_NO_ERROR )
   {
 #ifdef WINDOWS
@@ -75,6 +114,7 @@ int GLFont2D::RestoreDeviceObjects(int scrWidth,int scrHeight) {
 #endif
     return 0;    
   }
+#endif
 
   // Compute othographic matrix (for Transfomed Lit vertex)
   glMatrixMode( GL_PROJECTION );
@@ -125,10 +165,17 @@ void GLFont2D::DrawText(int x,int y,char *text) {
     float cH   = 15.0f / (float)fWidth;
 
     glBegin(GL_QUADS);
+#ifndef PLATFORM_PSVITA
     glTexCoord2f(xPos   ,yPos   );glVertex2i(x+9*i    ,y   );
     glTexCoord2f(xPos+cW,yPos   );glVertex2i(x+9*(i+1),y   );
     glTexCoord2f(xPos+cW,yPos+cH);glVertex2i(x+9*(i+1),y+15);
     glTexCoord2f(xPos   ,yPos+cH);glVertex2i(x+9*i    ,y+15);
+#else
+    glTexCoord2f(xPos   ,yPos   );glVertex2f((x+9*i - 480) / 480.0f,     (y - 544) / -544.0f);
+    glTexCoord2f(xPos+cW,yPos   );glVertex2f((x+9*(i+1) - 480) / 480.0f, (y - 544) / -544.0f);
+    glTexCoord2f(xPos+cW,yPos+cH);glVertex2f((x+9*(i+1) - 480) / 480.0f, (y+2*15 - 544) / -544.0f);
+    glTexCoord2f(xPos   ,yPos+cH);glVertex2f((x+9*i - 480) / 480.0f,     (y+2*15 - 544) / -544.0f);
+#endif
     glEnd();
 
   }

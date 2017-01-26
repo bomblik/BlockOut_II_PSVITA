@@ -23,6 +23,31 @@
 extern void InitialiseWinsock();
 #endif
 
+#ifdef PLATFORM_PSVITA
+#define SCREEN_WIDTH   960
+#define SCREEN_HEIGHT  544
+
+#include "SDL/SDL.h"
+
+enum psvita_buttons {
+        TRIANGLE = 0,
+        CIRCLE = 1,
+        CROSS = 2,
+        SQUARE = 3,
+        LEFT_TRIGGER = 4,
+        RIGHT_TRIGGER = 5,
+        DOWN = 6,
+        LEFT = 7,
+        UP = 8,
+        RIGHT = 9,
+        SELECT = 10,
+        START = 11,
+        HOME = 12
+};
+
+int DisableCubeTitle = 0;
+#endif
+
 #ifdef PLATFORM_PSP
 #include "sys/unistd.h"
 #include "GL/glu.h"
@@ -141,6 +166,13 @@ int main(int argc,char *argv[])
   setup_callbacks();
 #endif
 
+#ifdef PLATFORM_PSVITA
+  #ifdef PSVITA_DEBUG
+    psp2shell_init(3333, 0);
+    sceKernelDelayThread(2*1000000);
+  #endif
+#endif
+
   // Check environement
   if( !CheckEnv() ) {
     return 0;
@@ -153,21 +185,23 @@ int main(int argc,char *argv[])
   // Create and start the application
   BlockOut *glApp = new BlockOut();
 
-#ifndef PLATFORM_PSP
+#if defined(PLATFORM_PSP) || defined(PLATFORM_PSVITA)
+
+  if (!glApp->Create(SCREEN_WIDTH,
+          SCREEN_HEIGHT,
+          TRUE,
+          FALSE)) {
+
+          delete glApp;
+          return 0;
+  }
+#else
   if (!glApp->Create(glApp->theSetup.GetWindowWidth(),
 	  glApp->theSetup.GetWindowHeight(),
 	  glApp->theSetup.GetFullScreen(),
 	  glApp->theSetup.GetFrLimiter() == FR_LIMITVSYNC)) {
 	  delete glApp;
 	  return 0;
-  }
-#else
-  if (!glApp->Create(SCREEN_WIDTH,
-          SCREEN_HEIGHT,
-          TRUE,
-          FALSE)) {
-          delete glApp;
-          return 0;
   }
 #endif
 
@@ -258,17 +292,22 @@ int BlockOut::FrameMove()
           break;
         case 100: // Exit
           InvalidateDeviceObjects();
-#ifndef PLATFORM_PSP
+
+#if defined(PLATFORM_PSP)
+          SDL_Quit();
+          sceKernelExitGame ();
+          return 0;
+#elif defined(PLATFORM_PSVITA)
+          SDL_Quit();
+          sceKernelExitProcess (0);
+          return 0;
+#else
           BOOL fs = theSetup.GetFullScreen();
           if (fs) {
             theSetup.SetFullScreen(!fs);
             UpdateFullScreen();
           }
           _exit(0);
-#else
-          SDL_Quit();
-          sceKernelExitGame ();
-          return 0;
 #endif
           break;
       }
@@ -283,7 +322,7 @@ int BlockOut::FrameMove()
 #ifdef WINDOWS
         if(toSleep>0) Sleep(toSleep);
 #else
- #ifdef PLATFORM_PSP
+ #if defined(PLATFORM_PSP) || defined(PLATFORM_PSVITA)
         if(toSleep>0) SDL_Delay(toSleep*1000);
  #else
         if(toSleep>0) usleep(toSleep*1000);
@@ -347,6 +386,7 @@ int BlockOut::Render()
 #endif
         break;
       case GAME_MODE:
+        DisableCubeTitle = 1;
         theGame.Render();
 #ifdef _DEBUG
         // Output statistics
@@ -435,7 +475,7 @@ int BlockOut::RestoreDeviceObjects()
     glLightfv(GL_LIGHT0, GL_POSITION, position);
     glEnable(GL_LIGHT0);
 
-#ifndef PLATFORM_PSP
+#if !defined(PLATFORM_PSP)
     // Default for texure
     glHint(GL_PERSPECTIVE_CORRECTION_HINT,GL_NICEST);
 #endif
@@ -444,12 +484,14 @@ int BlockOut::RestoreDeviceObjects()
     glDisable(GL_BLEND);
     glDisable(GL_DEPTH_TEST);
 
+#ifndef PLATFORM_PSVITA
     //If there was any errors
     if( glGetError() != GL_NO_ERROR )
     {
         return GL_FAIL;    
     }
-    
+#endif
+
     // Set up device objects
     if( !theMenu.Create(m_screenWidth,m_screenHeight) )
       return GL_FAIL;
@@ -493,7 +535,7 @@ int BlockOut::EventProc(SDL_Event *event)
     break;
   */
 
-#ifndef PLATFORM_PSP
+#if !defined(PLATFORM_PSP) && !defined(PLATFORM_PSVITA)
   // Handle key presses
   if( event->type == SDL_KEYDOWN )
   {

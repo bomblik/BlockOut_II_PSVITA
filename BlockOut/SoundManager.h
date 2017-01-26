@@ -15,10 +15,11 @@
   GNU General Public License for more details.
 */
 #include "GLApp/GLApp.h"
-#ifndef PLATFORM_PSP
-#include <SDL_mixer.h>
-#else
+
+#if defined(PLATFORM_PSP) || defined(PLATFORM_PSVITA)
 #include "SDL/SDL_mixer.h"
+#else
+#include <SDL_mixer.h>
 #endif
 
 #ifndef SOUNDMANAGERH

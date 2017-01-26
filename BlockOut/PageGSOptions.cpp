@@ -41,11 +41,13 @@ void PageGSOptions::Render() {
     mParent->RenderText(19,1,FALSE,STR("Disabled"));
     mParent->RenderText(0,2,(selItem==2),STR("Window Size      :"));
   }
-#ifndef PLATFORM_PSP
+#if defined(PLATFORM_PSP)
+  mParent->RenderText(19,2,FALSE,"480x272");
+#elif defined(PLATFORM_PSVITA)
+  mParent->RenderText(19,2,FALSE,"960x544");
+#else
   size = mParent->GetSetup()->GetWindowSize();
   mParent->RenderText(19,2,FALSE,(char *)mParent->GetSetup()->GetResName(size));  
-#else
-  mParent->RenderText(19,2,FALSE,"480x272");
 #endif
 
   mParent->RenderText(0,3,(selItem==3),STR("Rotation Speed   :"));
@@ -140,7 +142,7 @@ int PageGSOptions::ProcessKey(int key) {
         }
       break;
       case 1: // Fullscreen mode
-#ifndef PLATFORM_PSP
+#if !defined(PLATFORM_PSP) && !defined(PLATFORM_PSVITA)
         if( key==SDLK_RIGHT || key==SDLK_LEFT ) {
           BOOL fs = mParent->GetSetup()->GetFullScreen();
           mParent->GetSetup()->SetFullScreen(!fs);
@@ -149,7 +151,7 @@ int PageGSOptions::ProcessKey(int key) {
 #endif
       break;
       case 2: // Window size
-#ifndef PLATFORM_PSP
+#if !defined(PLATFORM_PSP) && !defined(PLATFORM_PSVITA)
         switch( key ) {
           case SDLK_RIGHT:
             x = mParent->GetSetup()->GetWindowSize();
@@ -207,7 +209,7 @@ int PageGSOptions::ProcessKey(int key) {
         }
       break;
       case 5: // Game style
-#ifndef PLATFORM_PSP
+#if !defined(PLATFORM_PSP)
         switch( key ) {
           case SDLK_RIGHT:
             x = mParent->GetSetup()->GetStyle();

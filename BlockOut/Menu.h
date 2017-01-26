@@ -22,6 +22,16 @@
 #include "SoundManager.h"
 #include "Http.h"
 
+#if defined(PLATFORM_PSVITA)
+#include "SDL/SDL_timer.h"
+#ifdef TINYSDGL
+#include "GL/glu.h"
+#endif
+#ifdef PSVITA_DEBUG
+#define printf(...) psp2shell_print(__VA_ARGS__)
+#endif
+#endif
+
 #define BLLETTER_NB 9
 #define ANIMTIME    1.5f
 

@@ -1,0 +1,58 @@
+SOURCES=$(wildcard *.cpp wildcard GLApp/*cpp)
+OBJS=$(patsubst %.cpp, %.o, $(SOURCES))
+VERSION=2.5
+
+CC = arm-vita-eabi-g++
+CXX := arm-vita-eabi-g++
+STRIP = arm-vita-eabi-strip
+
+RELEASE_DIR=BlockOut_II
+
+TARGET=blockout2
+TITLE_ID=BOUT00002
+
+# -DPSVITA_DEBUG
+CFLAGS = -O2 -Wall -DPLATFORM_PSVITA -DGEKIHEN_CONTEST_SPLASH_SCREEN -DPSVITA_DEBUG \
+         -I../ImageLib/src/ -I$(VITASDK)/arm-vita-eabi/include -I$(VITASDK)/arm-vita-eabi/include/GL
+CXXFLAGS = $(CFLAGS) -fno-exceptions -fno-rtti
+ASFLAGS = $(CFLAGS)
+
+LIBDIR = ../ImageLib/src/
+
+LIBS =  ../ImageLib/src/libimagelib.a -lSDL_mixer -lvorbisfile -lvorbis -logg -lSDL -lTinyGL -lvita2d -lpng \
+       -ljpeg -lz -lstdc++ -lpsp2shell -lpthread -lSceDisplay_stub -lSceGxm_stub -lSceSysmodule_stub \
+       -lSceCtrl_stub -lScePgf_stub -lSceNetCtl_stub -lSceNet_stub -lScePower_stub -lSceCommonDialog_stub \
+       -lSceAppUtil_stub -lSceAudio_stub -lSceAppMgr_stub
+
+LDFLAGS =
+
+all: $(TARGET).vpk
+#all: eboot.bin
+
+%.vpk: eboot.bin
+	@vita-mksfoex -s TITLE_ID=$(TITLE_ID) "$(TARGET)" param.sfo
+	@rm -rf $(RELEASE_DIR)
+	@mkdir -p $(RELEASE_DIR)/sce_sys/livearea/contents
+	@cp psvita/sce_sys/icon0.png $(RELEASE_DIR)/sce_sys/
+	@cp psvita/sce_sys/livearea/contents/bg.png $(RELEASE_DIR)/sce_sys/livearea/contents/
+	@cp psvita/sce_sys/livearea/contents/startup.png $(RELEASE_DIR)/sce_sys/livearea/contents/
+	@cp psvita/sce_sys/livearea/contents/template.xml $(RELEASE_DIR)/sce_sys/livearea/contents/
+	@cp param.sfo $(RELEASE_DIR)/sce_sys/
+	@cp eboot.bin $(RELEASE_DIR)
+	@cp -r images $(RELEASE_DIR)
+	@cp -r images.psvita $(RELEASE_DIR)
+	@cp -r sounds $(RELEASE_DIR)
+	@cd $(RELEASE_DIR) && zip -r ../$(RELEASE_DIR).vpk . && cd ..
+	@echo
+	@echo File $(RELEASE_DIR).vpk" created"
+
+eboot.bin: $(TARGET).velf
+	vita-make-fself $< eboot.bin
+
+%.velf: %.elf
+#	$(PREFIX)-strip -g $<
+	vita-elf-create $< $@
+
+$(TARGET).elf: $(OBJS)
+	$(CC) -Wl,-q $(CFLAGS) $^ $(LIBS) -o $@
+

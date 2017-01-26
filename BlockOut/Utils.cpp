@@ -23,6 +23,10 @@
 
 #include <CImage.h>
 
+#if defined(PLATFORM_PSVITA)
+#include <psp2/io/stat.h>
+#endif
+
 #ifdef WINDOWS
 
 #include <windows.h>
@@ -31,7 +35,9 @@
 
 #else
 
+#if !defined(PLATFORM_PSVITA)
 #include <dirent.h>
+#endif
 #include <sys/stat.h>
 #include <sys/types.h>
 
@@ -40,7 +46,7 @@
 static char bl2Home[512];
 static char usrHome[512];
 
-#ifdef PLATFORM_PSP
+#if defined(PLATFORM_PSP) || defined(PLATFORM_PSVITA)
 char chracters[] = "abcdefghijklmnoprstuwz0123456789 ";
 static char letter = 0;
 #endif
@@ -158,14 +164,14 @@ char *FormatDateShort(uint32 time) {
 //-----------------------------------------------------------------------------
 
 BOOL DirExists(char *dirname) {
-
+#if !defined(PLATFORM_PSVITA)
   DIR    *dp;
 
   if((dp  = opendir(dirname)) == NULL) {
     return FALSE;
   }
   closedir(dp);
-  
+#endif
   return TRUE;
 
 }
@@ -205,10 +211,10 @@ BOOL CheckEnv() {
 
 #else
 
-#ifndef PLATFORM_PSP
-  char *homePath = getenv("HOME");
-#else
+#if defined(PLATFORM_PSP) || defined(PLATFORM_PSVITA)
   char *homePath = ".";
+#else
+  char *homePath = getenv("HOME");
 #endif
 
   if( homePath==NULL ) {
@@ -217,10 +223,12 @@ BOOL CheckEnv() {
     return FALSE;
   }
 
-#ifndef PLATFORM_PSP
-  char *blockoutHome = getenv("BL2_HOME");
-#else
+#if defined(PLATFORM_PSP)
   char *blockoutHome = ".";
+#elif defined(PLATFORM_PSVITA)
+  char *blockoutHome = "app0:";
+#else
+  char *blockoutHome = getenv("BL2_HOME");
 #endif
 
   if( blockoutHome==NULL ) {
@@ -230,7 +238,7 @@ BOOL CheckEnv() {
   }
   strcpy( bl2Home , blockoutHome );
 
-#ifndef PLATFORM_PSP
+#if !defined(PLATFORM_PSP) && !defined(PLATFORM_PSVITA)
   char bl2Dir[512];
   sprintf(bl2Dir,"%s/.bl2",homePath);
   if( !DirExists(bl2Dir) ) {
@@ -244,10 +252,13 @@ BOOL CheckEnv() {
   }
 #endif
 
-#ifndef PLATFORM_PSP
-  strcpy( usrHome , bl2Dir );
-#else
+#if defined(PLATFORM_PSP)
   strcpy( usrHome , "./" );
+#elif defined(PLATFORM_PSVITA)
+  sceIoMkdir("ux0:/data/blockout2", 0777);
+  strcpy( usrHome , "ux0:/data/blockout2" );
+#else
+  strcpy( usrHome , bl2Dir );
 #endif
 
   return TRUE;
@@ -359,6 +370,7 @@ int CreateTexture(int width,int height,char *imgName,GLuint *hmap) {
   img.Release();
   free(buff32);
 
+#if !defined(PLATFORM_PSVITA)
   if( glGetError() != GL_NO_ERROR ) {
 #ifdef WINDOWS
     char message[256];
@@ -369,7 +381,7 @@ int CreateTexture(int width,int height,char *imgName,GLuint *hmap) {
 #endif
     return GL_FAIL;
   }
-
+#endif
   return GL_OK;
 }
 
@@ -460,7 +472,7 @@ extern char GetChar(BYTE *keys) {
   // ';'
   if( keys[';'] ) retChar = ';';
 
-#ifdef PLATFORM_PSP
+#if defined(PLATFORM_PSP) || defined(PLATFORM_PSVITA)
   if ( keys[SDLK_RIGHT] ) {
     letter = 0;
   }

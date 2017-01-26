@@ -52,7 +52,7 @@ int SoundManager::Create() {
     sprintf(errMsg, "SDL_mixer: Audio initialisation error");
     enabled=FALSE;
     return FALSE;
-  }  
+  }
 
   if( !InitSound(LID(STR("sounds/blub.wav")),&blubSound) ) return FALSE;
   if( !InitSound(LID(STR("sounds/wozz.wav")),&wozzSound) ) return FALSE;

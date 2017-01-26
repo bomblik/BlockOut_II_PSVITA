@@ -49,13 +49,16 @@ class Sprites {
     // Render "On Line"
     void RenderOnLine();
 
-#ifdef PLATFORM_PSP
-    void RenderPitLevels(int level);
+#if defined(PLATFORM_PSP) || defined(PLATFORM_PSVITA)
+    void RenderPitLevels(int level, int depth, int style);
 #endif
 
   private:
-
+#ifndef PLATFORM_PSVITA
     void RenderNumbers(int x,int y,char *strMumber);
+#else
+    void RenderNumbers(float x, float y, char *strMumber);
+#endif
     void RenderLevel(int level);
     void RenderBlockSet(int blockSet);
     void RenderMode(int mode);
@@ -63,11 +66,12 @@ class Sprites {
 
     Sprite2D baseSprite;
     Sprite2D gameOverSprite;
-#ifdef PLATFORM_PSP
+#if defined(PLATFORM_PSP) || defined(PLATFORM_PSVITA)
     Sprite2D pitLevelsSprite;
 #endif
 
     // Coordinates
+#ifndef PLATFORM_PSVITA
     int xScore;
     int yScore;
     int xCube;
@@ -100,6 +104,40 @@ class Sprites {
     int yGOver;
     int wGOver;
     int hGOver;
+#else
+    float xScore;
+    float yScore;
+    float xCube;
+    float yCube;
+    float xhScore;
+    float yhScore;
+    float xPit;
+    float yPit;
+    float xBlock;
+    float yBlock;
+    float wScore;
+    float hScore;
+
+    float xLevel;
+    float yLevel;
+    float wLevel;
+    float hLevel;
+
+    float xReplay;
+    float yReplay;
+    float wReplay;
+    float hReplay;
+
+    float xOnline;
+    float yOnline;
+    float wOnline;
+    float hOnline;
+
+    float xGOver;
+    float yGOver;
+    float wGOver;
+    float hGOver;
+#endif
 
     int numberWidth[10];
 

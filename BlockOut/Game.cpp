@@ -160,7 +160,7 @@ int Game::Create(int width,int height) {
         hr = background.RestoreDeviceObjects(STR("images/background2.png"),STR("none"),width,height);
         break;
       case STYLE_ARCADE:
-        hr = background.RestoreDeviceObjects(STR("images/background3.png"),STR("none"),width,height);
+        hr = background.RestoreDeviceObjects(STR("images.psvita/background3.png"),STR("none"),width,height);
         break;
 #else
       case STYLE_CLASSIC:
@@ -174,7 +174,12 @@ int Game::Create(int width,int height) {
         break;
 #endif
     }
+
+#ifndef PLATFORM_PSVITA
     background.UpdateSprite(0,0,width,height,0.0f,0.0f,1.0f,0.75f);
+#else
+    background.UpdateSprite(-1, -1, 1, 1, 0.0f, 0.75f, 1.0f, 0.0f);
+#endif
 
     if(!hr) return GL_FAIL;
 
@@ -227,14 +232,25 @@ void Game::Render() {
     glViewport(spriteView.x,spriteView.y,spriteView.width,spriteView.height);
     background.Render();
 
+#if defined(PLATFORM_PSVITA)
+    pFont->DrawText( 10,  34,           " LEVEL ");
+    pFont->DrawText( 793,  235,         "       SCORE      ");
+    pFont->DrawText( 793,  380,         "   CUBES PLAYED   ");
+    pFont->DrawText( 793,  676,         "    HIGH SCORE    ");
+    pFont->DrawText( 793,  830,         "       PIT        ");
+    pFont->DrawText( 793,  977,         "    BLOCK SET     ");
+
+    glClear( GL_DEPTH_BUFFER_BIT );
+#endif
+
     // Score
     sprites.RenderInfo(highScore,thePit.GetWidth(),thePit.GetHeight(),
                        thePit.GetDepth(),setupManager->GetBlockSet());
 
-#ifndef PLATFORM_PSP
-     thePit.RenderLevel();
- #else
-    sprites.RenderPitLevels(thePit.GetLevel());
+#if !defined(PLATFORM_PSP) && !defined(PLATFORM_PSVITA)
+    thePit.RenderLevel();
+#else
+    sprites.RenderPitLevels(thePit.GetLevel(), thePit.GetDepth(), style);
 #endif
 
     sprites.RenderScore(score.score,level,score.nbCube);
@@ -288,7 +304,7 @@ void Game::Render() {
     pFont->DrawText( 90,  40, botPlayer.GetInfo(&thePit,cubes,nbCube) );
 #endif
 
-#ifndef PLATFORM_PSP
+#if !defined(PLATFORM_PSP) && !defined(PLATFORM_PSVITA)
     RenderPracticeHelp();
 #endif
 

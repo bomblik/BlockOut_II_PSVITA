@@ -25,6 +25,21 @@
 #include "SetupManager.h"
 #include "SoundManager.h"
 
+#ifdef PLATFORM_PSVITA
+
+#ifdef TINYSDGL
+#include "GL/gl.h"
+#endif
+
+#include <psp2shell.h>
+#include <psp2/kernel/processmgr.h>
+
+#ifdef PSVITA_DEBUG
+#define printf(...) psp2shell_print(__VA_ARGS__)
+#endif
+
+#endif
+
 class Game {
 
   public:

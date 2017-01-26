@@ -122,19 +122,44 @@ int Menu::Create(int width,int height) {
     return GL_FAIL;
 
   // Background
+#ifndef PLATFORM_PSVITA
   int x1 = fround( (float)width  * 0.13f );
   int y1 = fround( (float)height * 0.41f );
   int x2 = fround( (float)width  * 0.87f );
   int y2 = fround( (float)height * 0.985f );
+#else
+  float x1 = width  * 0.13f;
+  float y1 = height * 0.41f;
+  float x2 = width  * 0.87f;
+  float y2 = height;
+#endif
 
 #ifndef PLATFORM_PSP
   if( !background.RestoreDeviceObjects(STR("images/menuback.png"),STR("none"),width,height) )
     return GL_FAIL;
+
+#ifndef PLATFORM_PSVITA
   background.UpdateSprite(x1,y1,x2,y2,0.0f,0.0f,1.0f,1.0f);
+#else
+  background.UpdateSprite((width  * 0.13f - 480) / 480.0f,
+                         (- 544) / 544.0f,
+                         (width  * 0.87f - 480) / 480.0f,
+                         (height * 0.985f - 544) / 544.0f + 0.03f,
+                         0.0f, 0.0f, 1.0f, 1.0f);
+#endif
 
   if(!background2.RestoreDeviceObjects(STR("images/menucredits.png"),STR("none"),width,height) )
     return GL_FAIL;
+
+#ifndef PLATFORM_PSVITA
   background2.UpdateSprite(x1,y1,x2,y2,0.0f,0.0f,1.0f,1.0f);
+#else
+  background2.UpdateSprite((x1 - 480) / 480.0f,
+                           (y2 - 544) / 544.0f,
+                           (x2 - 480) / 480.0f,
+                           (- 544) / 544.0f,
+                           0.0f,0.0f,1.0f,1.0f);
+#endif
 
   // Font
   wFont = fround( (float)width  * 0.0205f );
@@ -451,7 +476,11 @@ void Menu::RenderChar(int x,int y,int w,int h,BOOL selected,char c) {
   }
 
   if( fnt==1 ) {
+#ifndef PLATFORM_PSVITA
     font.UpdateSprite(x,y,x+w,y+h,sX,sY,eX,eY);
+#else
+    font.UpdateSprite((float) (x - 480) / 480.0f, (float) (y - h - 544) / -544.0f - 0.62f, (float) (x  + w - 480) / 480.0f, (float) (y - 544) / -544.0f - 0.62f,  sX,sY,eX,eY);
+#endif
     font.Render();
   } else {
     font2.UpdateSprite(x,y,x+w,y+h,sX,sY,eX,eY);
@@ -468,10 +497,18 @@ void Menu::RenderTitle(char *title) {
   int  nwFont = fround((float)wFont*1.1f);
   int  nhFont = fround((float)hFont*1.1f);
   int  x1 = (scrWidth - (nwFont * lgth))/2;
+#ifndef PLATFORM_PSVITA
   int  y1 = fround( 0.43f * (float)scrHeight );
+#else
+  int  y1 = fround( 0.43f * (float)scrHeight );
+#endif
 
   for(int i=0;i<lgth;i++,x1+=nwFont) {
+#ifndef PLATFORM_PSVITA
     RenderChar(x1,y1,nwFont,nhFont,FALSE,title[i]);
+#else
+    RenderChar(x1,y1,nwFont,nhFont*2,FALSE,title[i]);
+#endif
   }
 
 }
@@ -486,10 +523,18 @@ void Menu::RenderText(int x,int y,BOOL selected,char *text) {
 
   int   lgth = (int)strlen(text);
   int   x1 = fround( startColumn*(float)scrWidth ) + x*wFont;
+#ifndef PLATFORM_PSVITA
   int   y1 = fround( (startLine+y*lineHeight)*(float)scrHeight );
+#else
+  int   y1 = fround( (startLine+y*lineHeight*2)*(float)scrHeight );
+#endif
 
   for(int i=0;i<lgth;i++,x1+=wFont) {
+#ifndef PLATFORM_PSVITA
     RenderChar(x1,y1,wFont,hFont,selected,text[i]);
+#else
+    RenderChar(x1,y1,wFont,hFont*2,selected,text[i]);
+#endif
   }
 
 }

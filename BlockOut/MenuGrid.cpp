@@ -17,6 +17,10 @@
 
 #include "MenuGrid.h"
 
+#ifdef PLATFORM_PSVITA
+extern int DisableCubeTitle;
+#endif
+
 // ----------------------------------------------------------------
 
 MenuGrid::MenuGrid() {
@@ -428,6 +432,9 @@ void MenuGrid::Render() {
   glCallList(gridList);
 
   // Render cubes
+#ifdef PLATFORM_PSVITA
+  if (!DisableCubeTitle)
+#endif
   for(int i=0;i<GRID_WIDTH*GRID_HEIGHT;i++) {
     int x = orderMatrix[i].x;
     int y = orderMatrix[i].y;

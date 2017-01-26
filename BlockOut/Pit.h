@@ -17,6 +17,10 @@
 
 #include "PolyCube.h"
 
+#if defined(PLATFORM_PSVITA)
+#include "GL/gl.h"
+#endif
+
 #define NBTCUBE 16
 
 class Pit
@@ -47,7 +51,7 @@ class Pit
     // Render the pit level
     void RenderLevel();
 
-#ifdef PLATFORM_PSP
+#if defined(PLATFORM_PSP) || defined(PLATFORM_PSVITA)
     int GetLevel();
 #endif
 

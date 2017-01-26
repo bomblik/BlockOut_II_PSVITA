@@ -9,6 +9,10 @@
 
 #include <CImage.h>
 
+#if defined(PSVITA_DEBUG)
+#define printf(...) psp2shell_print(__VA_ARGS__)
+#endif
+
 extern char *LID(char *fileName);
 
 // -------------------------------------------
@@ -28,7 +32,7 @@ void Sprite2D::SetSpriteMapping(float mx1,float my1,float mx2,float my2) {
 }
 
 // -------------------------------------------
-
+#ifndef PLATFORM_PSVITA
 void Sprite2D::UpdateSprite(int x1,int y1,int x2,int y2,float mx1,float my1,float mx2,float my2) {
 
   this->x1 = x1;
@@ -52,6 +56,31 @@ void Sprite2D::UpdateSprite(int x1,int y1,int x2,int y2) {
   this->y2 = y2;
 
 }
+#else
+void Sprite2D::UpdateSprite(float x1,float y1,float x2,float y2,float mx1,float my1,float mx2,float my2) {
+
+  this->x1 = x1;
+  this->y1 = y1;
+  this->x2 = x2;
+  this->y2 = y2;
+  this->mx1 = mx1;
+  this->my1 = my1;
+  this->mx2 = mx2;
+  this->my2 = my2;
+
+}
+
+// -------------------------------------------
+
+void Sprite2D::UpdateSprite(float x1,float y1,float x2,float y2) {
+
+  this->x1 = x1;
+  this->y1 = y1;
+  this->x2 = x2;
+  this->y2 = y2;
+
+}
+#endif
 
 // -------------------------------------------
 
@@ -78,6 +107,11 @@ int Sprite2D::RestoreDeviceObjects(char *diffName,char *alphaName,int scrWidth,i
   }
 
   hasAlpha = strcmp(alphaName,"none")!=0;
+
+#if defined(PLATFORM_PSVITA)
+  hasAlpha = 0;
+#endif
+
   if( hasAlpha ) {
     if( !imga.LoadImage(LID(alphaName)) ) {
 #ifdef WINDOWS
@@ -132,6 +166,14 @@ int Sprite2D::RestoreDeviceObjects(char *diffName,char *alphaName,int scrWidth,i
   glGenTextures(1,&texId);
   glBindTexture(GL_TEXTURE_2D,texId);
 
+#if !defined(PLATFORM_PSVITA)
+  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR); // scale linearly when image bigger than texture
+  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR); // scale linearly when image smalled than texture
+#else
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+#endif
+
   glTexImage2D (
     GL_TEXTURE_2D,      // Type
     0,                  // No Mipmap
@@ -148,6 +190,7 @@ int Sprite2D::RestoreDeviceObjects(char *diffName,char *alphaName,int scrWidth,i
   img.Release();
   imga.Release();
 
+#ifndef PLATFORM_PSVITA
   if( glGetError() != GL_NO_ERROR )
   {
 #ifdef WINDOWS
@@ -159,6 +202,7 @@ int Sprite2D::RestoreDeviceObjects(char *diffName,char *alphaName,int scrWidth,i
 #endif
     return 0;    
   }
+#endif
 
   // Compute othographic matrix (for Transfomed Lit vertex)
   glMatrixMode( GL_PROJECTION );
@@ -188,8 +232,15 @@ void Sprite2D::Render() {
   glDisable(GL_DEPTH_TEST);
   glEnable(GL_TEXTURE_2D);
   glBindTexture(GL_TEXTURE_2D,texId);
+
+#ifndef PLATFORM_PSVITA
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+#else
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+#endif
+
   if( hasAlpha ) {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_BLEND);
@@ -203,10 +254,17 @@ void Sprite2D::Render() {
   glLoadIdentity();
 
   glBegin(GL_QUADS);
-  glTexCoord2f(mx1,my1);glVertex2i(x1,y1);
-  glTexCoord2f(mx2,my1);glVertex2i(x2,y1);
-  glTexCoord2f(mx2,my2);glVertex2i(x2,y2);
-  glTexCoord2f(mx1,my2);glVertex2i(x1,y2);
+#ifndef PLATFORM_PSVITA
+   glTexCoord2f(mx1,my1);glVertex2i(x1,y1);
+   glTexCoord2f(mx2,my1);glVertex2i(x2,y1);
+   glTexCoord2f(mx2,my2);glVertex2i(x2,y2);
+   glTexCoord2f(mx1,my2);glVertex2i(x1,y2);
+#else
+   glTexCoord2f(mx1,my1);glVertex2f((float) x1,(float) y1);
+   glTexCoord2f(mx2,my1);glVertex2f((float) x2,(float) y1);
+   glTexCoord2f(mx2,my2);glVertex2f((float) x2,(float) y2);
+   glTexCoord2f(mx1,my2);glVertex2f((float) x1,(float) y2);
+#endif
   glEnd();
 
 }

@@ -34,7 +34,7 @@ void PageControls::Render() {
 
   pitBack.Render();
 
-#ifndef PLATFORM_PSP
+#if !defined(PLATFORM_PSP) && !defined(PLATFORM_PSVITA)
   mParent->RenderTitle(STR("GAME CONTROLS"));
 
   RenderKey(4,5,mParent->GetSetup()->GetKRx1(),2);
@@ -64,7 +64,7 @@ void PageControls::Render() {
   mParent->GetSetup()->ResetToQwerty();
 
   mParent->RenderTitle(STR("GAME CONTROLS"));
-
+#if !defined(PLATFORM_PSVITA)
   RenderKey(3,5,mParent->GetSetup()->GetKRx1(),2);
   RenderKey(3,6,mParent->GetSetup()->GetKRx2(),3);
   RenderKey(12,5,mParent->GetSetup()->GetKRy1(),4);
@@ -79,6 +79,22 @@ void PageControls::Render() {
     mParent->RenderText(2,5,TRUE,STR("-"));
     mParent->RenderText(31,5,TRUE,STR("-"));
   }
+#else
+  RenderKey(3,2,mParent->GetSetup()->GetKRx1(),2);
+  RenderKey(3,4,mParent->GetSetup()->GetKRx2(),3);
+  RenderKey(12,2,mParent->GetSetup()->GetKRy1(),4);
+  RenderKey(12,4,mParent->GetSetup()->GetKRy2(),5);
+  RenderKey(22,2,mParent->GetSetup()->GetKRz1(),6);
+  RenderKey(22,4,mParent->GetSetup()->GetKRz2(),7);
+
+  if( rotMode ) {
+    mParent->RenderText(2,4,TRUE,STR("-"));
+    mParent->RenderText(31,4,TRUE,STR("-"));
+  } else {
+    mParent->RenderText(2,2,TRUE,STR("-"));
+    mParent->RenderText(31,2,TRUE,STR("-"));
+  }
+#endif
 
     mParent->RenderText(0,8,FALSE,STR("[DPAD] :Move    [CROSS]   :Drop"));
     mParent->RenderText(0,9,FALSE,STR("[START]:Pause   [RTRIGGER]:Cancel"));
@@ -104,7 +120,7 @@ void PageControls::RenderKey(int x,int y,char k,int pos) {
 
   char tmp[256];
 
-#ifndef PLATFORM_PSP
+#if !defined(PLATFORM_PSP) && !defined(PLATFORM_PSVITA)
   if( !editMode || selItem!=pos ) {
     sprintf(tmp,"[%c]",k);
     mParent->RenderText(x,y,(selItem==pos),tmp);
@@ -401,7 +417,7 @@ int PageControls::Process(BYTE *keys,float fTime) {
       case 7: // Configure D
         for(int i='A';i<='Z';i++) keys[i] = 0;
         for(int i='a';i<='z';i++) keys[i] = 0;
-#ifndef PLATFORM_PSP
+#if !defined(PLATFORM_PSP) && !defined(PLATFORM_PSVITA)
         editMode = TRUE;
 #endif
         startEditTime = fTime;
@@ -460,7 +476,11 @@ int PageControls::Create(int width,int height) {
 
   // Create pit background
   float pitX = (float)width  * 0.2187f;
+#ifndef PLATFORM_PSVITA
   float pitY = (float)height * 0.485f;
+#else
+  float pitY = (float)height * 0.685f;
+#endif
   float pitW = (float)width  * 0.5625f;
   float pitH = (float)height * 0.25f;
 
@@ -470,9 +490,16 @@ int PageControls::Create(int width,int height) {
   if( !pitBack.RestoreDeviceObjects(STR("images.psp/menupit.png"),STR("none"),width,height) )
 #endif
     return GL_FAIL;
+
+#ifndef PLATFORM_PSVITA
   pitBack.UpdateSprite(fround(pitX),fround(pitY),
                        fround(pitX+pitW),fround(pitY+pitH),
                        0.0f,0.0f,1.0f,0.337f);
+#else
+  pitBack.UpdateSprite(pitX,pitY,
+                       pitX+pitW,pitY+pitH,
+                       0.0f,0.0f,1.0f,0.337f);
+#endif
 
   // Emulate pit 9*3*12
   cubeSide = 1.0f/9.0f;

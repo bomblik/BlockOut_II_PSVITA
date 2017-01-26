@@ -28,7 +28,7 @@ Sprites::Sprites() {
 
 int Sprites::Create(DWORD width,DWORD height) {
 
-#ifndef PLATFORM_PSP
+#if !defined(PLATFORM_PSP)
   if( !baseSprite.RestoreDeviceObjects(STR("images/sprites.png"),
                                        STR("images/spritesa.png"),
                                        width,height) )
@@ -38,6 +38,14 @@ int Sprites::Create(DWORD width,DWORD height) {
                                            STR("images/gameovera.png"),
                                            width,height) )
     return GL_FAIL;
+
+  #if defined(PLATFORM_PSVITA)
+  if( !pitLevelsSprite.RestoreDeviceObjects(STR("images.psvita/levels.png"),
+                                            STR("none"),
+                                            width,height) )
+    return GL_FAIL;
+  #endif
+
 #else
   if( !baseSprite.RestoreDeviceObjects(STR("images.psp/sprites.png"),
                                        STR("images.psp/spritesa.png"),
@@ -53,9 +61,10 @@ int Sprites::Create(DWORD width,DWORD height) {
                                             STR("none"),
                                             width,height) )
     return GL_FAIL;
- #endif
+#endif
 
   // Init coordinates
+#ifndef PLATFORM_PSVITA
   xScore  = fround( 0.8369f * (float)width);
   yScore  = fround( 0.2500f * (float)height);
   wScore  = fround( 0.1416f * (float)width);
@@ -88,6 +97,40 @@ int Sprites::Create(DWORD width,DWORD height) {
   yGOver  = fround( 0.4167f * (float)height);
   wGOver  = fround( 0.2500f * (float)width);
   hGOver  = fround( 0.1680f * (float)height);
+#else
+  xScore  = ( 0.8369f * (float)width);
+  yScore  = ( 0.2500f * (float)height);
+  wScore  = ( 0.1416f * (float)width);
+  hScore  = ( 0.0470f * (float)height);
+  xCube   = ( 0.8369f * (float)width);
+  yCube   = ( 0.3828f * (float)height);
+  xhScore = ( 0.8369f * (float)width);
+  yhScore = ( 0.6575f * (float)height);
+  xPit    = ( 0.8369f * (float)width);
+  yPit    = ( 0.7942f * (float)height);
+  xBlock  = ( 0.8369f * (float)width);
+  yBlock  = ( 0.9297f * (float)height);
+
+  xLevel  = ( 0.0186f * (float)width);
+  yLevel  = ( 0.0651f * (float)height);
+  wLevel  = ( 0.0479f * (float)width);
+  hLevel  = ( 0.0635f * (float)height);
+
+  xReplay = ( 0.8301f * (float)width);
+  yReplay = ( 0.5078f * (float)height);
+  wReplay = ( 0.1543f * (float)width);
+  hReplay = ( 0.0456f * (float)height);
+
+  xOnline = ( 0.9150f * (float)width);
+  yOnline = ( 0.5534f * (float)height);
+  wOnline = ( 0.0684f * (float)width);
+  hOnline = ( 0.0534f * (float)height);
+
+  xGOver  = ( 0.3252f * (float)width);
+  yGOver  = ( 0.4167f * (float)height);
+  wGOver  = ( 0.2500f * (float)width);
+  hGOver  = ( 0.1680f * (float)height);
+#endif
 
   // number font width
   for(int i=0;i<10;i++) {
@@ -111,6 +154,7 @@ void Sprites::RenderScore(DWORD score,DWORD level,DWORD cubes) {
 
   char tmp[256];
 
+#ifndef PLATFORM_PSVITA
   // Score
   sprintf(tmp,"%u",score);
   RenderNumbers(xScore,yScore,tmp);
@@ -118,6 +162,15 @@ void Sprites::RenderScore(DWORD score,DWORD level,DWORD cubes) {
   // Cube
   sprintf(tmp,"%u",cubes);
   RenderNumbers(xScore,yCube,tmp);
+#else
+  // Score
+  sprintf(tmp,"%u",score);
+  RenderNumbers(xScore, yScore + 136, tmp);
+
+  // Cube
+  sprintf(tmp,"%u",cubes);
+  RenderNumbers(xScore, yCube + 212, tmp);
+#endif
 
   // Level
   RenderLevel(level);
@@ -130,6 +183,7 @@ void Sprites::RenderInfo(DWORD hScore,int x,int y,int z,int blockSet) {
 
   char tmp[256];
 
+#ifndef PLATFORM_PSVITA
   // High Score
   sprintf(tmp,"%u",hScore);
   RenderNumbers(xScore,yhScore,tmp);
@@ -137,6 +191,15 @@ void Sprites::RenderInfo(DWORD hScore,int x,int y,int z,int blockSet) {
   // Pit
   sprintf(tmp,"%ux%ux%u",x,y,z);
   RenderNumbers(xScore,yPit,tmp);
+#else
+  // High Score
+  sprintf(tmp,"%u",hScore);
+  RenderNumbers(xScore, yhScore + 358, tmp);
+
+  // Pit
+  sprintf(tmp,"%ux%ux%u",x,y,z);
+  RenderNumbers(xScore, yPit + 430, tmp);
+#endif
 
   // Set
   RenderBlockSet(blockSet);
@@ -157,7 +220,11 @@ int Sprites::GetNumberWidth(char number) {
 
 // ----------------------------------------------------------------
 
+#ifndef PLATFORM_PSVITA
 void Sprites::RenderNumbers(int x,int y,char *strMumber) {
+#else
+void Sprites::RenderNumbers(float x, float y, char *strMumber) {
+#endif
 
   float sX;
   float eX;
@@ -206,7 +273,15 @@ void Sprites::RenderNumbers(int x,int y,char *strMumber) {
       }
     
       // Update and render sprite
+#ifndef PLATFORM_PSVITA
       baseSprite.UpdateSprite(x,y,x+nwidth,y+hScore,sX,sY,eX,eY);
+#else
+      baseSprite.UpdateSprite((x - 480) / 480.0f,
+                              (y - 544) / -544.0f,
+                              (x+nwidth - 480) / 480.0f,
+                              (y+hScore*2 - 544) / -544.0f,
+                              sX, sY, eX, eY);
+#endif
       baseSprite.Render();
 
     }
@@ -234,7 +309,15 @@ void Sprites::RenderNumbers(int x,int y,char *strMumber) {
     }
 
     // Update and render sprite
+#ifndef PLATFORM_PSVITA
     baseSprite.UpdateSprite(pos,y,pos+GetNumberWidth(number),y+hScore,sX,sY,eX,eY);
+#else
+    baseSprite.UpdateSprite((pos - 480) / 480.0f,
+                            (y - 544) / -544.0f,
+                            (pos+GetNumberWidth(number) - 480) / 480.0f,
+                            (y+hScore*2 - 544) / -544.0f,
+                            sX, sY, eX, eY);
+#endif
     baseSprite.Render();
 
     pos += GetNumberWidth(number);
@@ -259,18 +342,34 @@ void Sprites::RenderLevel(int level) {
     sY = 0.473f;
     eY = 0.598f;
     int border = (wLevel - (numberWidth[level] * 2))/2;
+#ifndef PLATFORM_PSVITA
     baseSprite.UpdateSprite(xLevel+border,yLevel,
                             xLevel+wLevel-border,yLevel+hLevel,
                             sX,sY,eX,eY);
+#else
+    baseSprite.UpdateSprite((xLevel+border - 480) / 480.0f + 0.01f,
+                            (yLevel - 544) / -544.0f - 0.08f,
+                            (xLevel+wLevel-border - 480)  / 480.0f,
+                            (yLevel+hLevel - 544) / -544.0f - 0.10f,
+                            sX,sY,eX,eY);
+#endif
   } else {
     // TDM
     sX = 0.100f;
     sY = 0.132f;
     eX = 0.215f;
     eY = 0.230f;
+#ifndef PLATFORM_PSVITA
     baseSprite.UpdateSprite(xLevel,yLevel,
                             xLevel+wLevel,yLevel+hLevel,
                             sX,sY,eX,eY);
+#else
+    baseSprite.UpdateSprite((xLevel - 480) / 480.0f + 0.01f,
+                            (yLevel - 544) / -544.0f - 0.08f,
+                            (xLevel+wLevel - 480)  / 480.0f,
+                            (yLevel+hLevel - 544) / -544.0f  - 0.10f,
+                            sX,sY,eX,eY);
+#endif
   }
 
   // Update and render sprite
@@ -301,13 +400,28 @@ void Sprites::RenderGameMode(int mode) {
   }
 
   // Screen pos
+#ifndef PLATFORM_PSVITA
   int x1 = xGOver;
   int y1 = yGOver;
   int x2 = xGOver + wGOver;
   int y2 = yGOver + hGOver;
+#else
+  float x1 = xGOver;
+  float y1 = yGOver;
+  float x2 = xGOver + wGOver;
+  float y2 = yGOver + hGOver;
+#endif
 
   // Update and render sprite
+#ifndef PLATFORM_PSVITA
   gameOverSprite.UpdateSprite(x1,y1,x2,y2,sX,sY,eX,eY);
+#else
+  gameOverSprite.UpdateSprite((x1 - 480) / 480.0f,
+                              (y1 - 544) / -544.0f - 0.95f,
+                              (x2 - 480) / 480.0f,
+                              (y2 - 544) / -544.0f - 0.95f,
+                              sX, sY, eX, eY);
+#endif
   gameOverSprite.Render();
 
 }
@@ -429,13 +543,28 @@ void Sprites::RenderBlockSet(int blockSet) {
   }
 
   // Screen pos
+#ifndef PLATFORM_PSVITA
   int x1 = xBlock;
+#else
+  int x1 = xBlock + 10;
+#endif
   int y1 = yBlock;
   int x2 = xBlock + wScore;
+#ifndef PLATFORM_PSVITA
   int y2 = yBlock + hScore;
+#else
+  int y2 = yBlock + hScore*2;
+#endif
 
   // Update and render sprite
+#ifndef PLATFORM_PSVITA
   baseSprite.UpdateSprite(x1,y1,x2,y2);
+#else
+  baseSprite.UpdateSprite((x1 - 480) / 480.0f,
+                          (y1 - 544) / -544.0f - 0.93f,
+                          (x2 - 480) / 480.0f,
+                          (y2 - 544) / -544.0f - 0.93f);
+#endif
   baseSprite.SetSpriteMapping(sX,sY,eX,eY);
   baseSprite.Render();
 
@@ -443,16 +572,49 @@ void Sprites::RenderBlockSet(int blockSet) {
 
 // ----------------------------------------------------------------
 
-#ifdef PLATFORM_PSP
-void Sprites::RenderPitLevels(int level) {
+#if defined(PLATFORM_PSP) || defined(PLATFORM_PSVITA)
+void Sprites::RenderPitLevels(int level, int depth, int style) {
     int cubeNumber = 7;
     int x1 = 10;
     int y1 = 265;
     int x2 = 32;
     int height = 12;
 
+#ifdef PLATFORM_PSVITA
+    float y_offset = 0;
+    if (depth > 12)
+        y_offset = 1.755f / depth - 0.01125f;
+    else
+        y_offset = 0.135f;
+#endif
+
     for (int i=0;i<level; i++) {
+    #ifndef PLATFORM_PSVITA
       pitLevelsSprite.UpdateSprite(x1,y1 - height*i,x2,y1 - height - height*i,0.43f,0.81f - 0.093f * (i % cubeNumber),0.58f,0.73f - 0.093f * (i % cubeNumber));
+    #else
+      if ((style != STYLE_ARCADE) && (style != STYLE_MARBLE))
+      {
+        pitLevelsSprite.UpdateSprite(-0.95f,
+                                     -0.94f + y_offset * i,
+                                     -0.87f,
+                                     -0.94f + y_offset * (i+1),
+                                     1.0f - 34 * 0.00390625f,
+                                     1.0f - 34 * 0.00390625f * (i % cubeNumber),
+                                     1.0f,
+                                     1.0f - 34 * 0.00390625f - 34 * 0.00390625f * (i % cubeNumber));
+      }
+      else
+      {
+        pitLevelsSprite.UpdateSprite(-0.95f,
+                                     -0.94f + y_offset * i,
+                                     -0.87f,
+                                     -0.94f + y_offset * (i+1),
+                                     -1.0f,
+                                     1.0f,
+                                     -1.0f + 34 * 0.00390625f,
+                                     1.0f - 34 * 0.00390625f);
+      }
+    #endif
       pitLevelsSprite.Render();
     }
 
