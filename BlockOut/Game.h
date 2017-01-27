@@ -206,5 +206,7 @@ class Game {
     void StartSpark(BLOCKITEM *pos);
     void RenderPracticeHelp();
     void ComputeHelp();
-
+#ifdef PLATFORM_PSVITA
+    void LoadBackground(char * path);
+#endif
 };
