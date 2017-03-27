@@ -1,4 +1,4 @@
-#BlockOut II for Playstation Vita
+# BlockOut II for Playstation Vita
 
 This is a Sony Playstation Vita port of BlockOut II game by Jean-Luc PONS.
 
@@ -12,7 +12,7 @@ https://en.wikipedia.org/wiki/Blockout
 
 This port is based on BlockOut II release 2.5
 
-##Game screenshots
+## Game screenshots
 
 Screenshots of different graphical game skins
 
@@ -31,7 +31,7 @@ Screenshots of different graphical game skins
 </figure>
 </p>
 
-##Binary installation
+## Binary installation
 
 https://github.com/bomblik/BlockOut_II_PSVITA/releases/tag/BlockOut_II_PSVITA_2.5
 
@@ -39,9 +39,9 @@ Install vpk file according to instructions found on
 
 https://henkaku.xyz/usage
 
-##Source installation
+## Source installation
 
-###Compilation
+### Compilation
 
 In order to compile BlockOut_II_PSVITA, please install vitasdk
 and set development environment.
@@ -54,11 +54,11 @@ To compile project invoke
     cd ../../BlockOut
     make -f Makefile.psvita
 
-###Installation
+### Installation
 
 Follow instructions from Binary installation section.
 
-##Key mappings
+## Key mappings
 
     CROSS                    - confirm / drop block
     RIGHT TRIGGER            - cancel / exit game
@@ -74,7 +74,7 @@ Follow instructions from Binary installation section.
 
     START                    - pause / resume game
 
-##Online score database
+## Online score database
 
 The game has a strong user community and an online world ranking of user scores.
 
@@ -86,7 +86,7 @@ Currently you can play against / compare your score to an online score database,
 
 Please look at TODO section, regarding score uploading.
 
-##Credits
+## Credits
 
 Jean-Luc PONS for an awesome game.
 <br>
@@ -100,12 +100,12 @@ xerpi, Cpasjuste for SDL library port.
 <br>
 Cpasjuste for PSP2SHELL, ports of SDL auxiliary libraries and TinyGL.
 
-##TODO
+## TODO
 
 The game has an option to upload user scores to the game server, but that option is only included in binary releases for pc.
 
 Reverse engineering of 'reply file' content and communication protocol is needed in order to upload user scores from PS VITA port of the game.
 
-##Disclaimer
+## Disclaimer
 
 There are some minor graphical issues due to TinyGL limitations.
